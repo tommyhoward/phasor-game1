@@ -33,7 +33,7 @@
   const SPEED = 300;
   let ball;
   let cursors;
-  const touch = { left: false, right: false, up: false, down: false };
+  let pointerDown = false;
 
   window.game = new Phaser.Game(config);
 
@@ -44,43 +44,28 @@
 
     cursors = this.input.keyboard.createCursorKeys();
 
-    createDpad(this);
-  }
-
-  function createDpad(scene) {
-    const r = 40;
-    const gap = 85;
-    const cx = 140;
-    const cy = 600 - 140;
-
-    makeButton(scene, cx, cy - gap, r, '▲', 'up');
-    makeButton(scene, cx, cy + gap, r, '▼', 'down');
-    makeButton(scene, cx - gap, cy, r, '◀', 'left');
-    makeButton(scene, cx + gap, cy, r, '▶', 'right');
-  }
-
-  function makeButton(scene, x, y, r, label, dir) {
-    const circle = scene.add.circle(x, y, r, 0xffffff, 0.15)
-      .setStrokeStyle(2, 0xffffff, 0.4)
-      .setScrollFactor(0)
-      .setInteractive();
-    scene.add.text(x, y, label, { fontSize: '28px', color: '#ffffff' })
-      .setOrigin(0.5)
-      .setScrollFactor(0);
-
-    circle.on('pointerdown', () => { touch[dir] = true; });
-    circle.on('pointerup', () => { touch[dir] = false; });
-    circle.on('pointerout', () => { touch[dir] = false; });
+    this.input.on('pointerdown', () => { pointerDown = true; });
+    this.input.on('pointerup', () => { pointerDown = false; });
   }
 
   function update() {
     ball.body.setVelocity(0);
 
-    if (cursors.left.isDown || touch.left) ball.body.setVelocityX(-SPEED);
-    else if (cursors.right.isDown || touch.right) ball.body.setVelocityX(SPEED);
+    if (cursors.left.isDown) ball.body.setVelocityX(-SPEED);
+    else if (cursors.right.isDown) ball.body.setVelocityX(SPEED);
 
-    if (cursors.up.isDown || touch.up) ball.body.setVelocityY(-SPEED);
-    else if (cursors.down.isDown || touch.down) ball.body.setVelocityY(SPEED);
+    if (cursors.up.isDown) ball.body.setVelocityY(-SPEED);
+    else if (cursors.down.isDown) ball.body.setVelocityY(SPEED);
+
+    if (pointerDown) {
+      const pointer = this.input.activePointer;
+      const dx = pointer.worldX - ball.x;
+      const dy = pointer.worldY - ball.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 4) {
+        ball.body.setVelocity((dx / dist) * SPEED, (dy / dist) * SPEED);
+      }
+    }
   }
 </script>
 </body>
