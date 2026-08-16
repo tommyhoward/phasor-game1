@@ -33,7 +33,7 @@
   const SPEED = 300;
   let ball;
   let cursors;
-  let pointerDown = false;
+  let moveDir = { x: 0, y: 0 };
 
   window.game = new Phaser.Game(config);
 
@@ -44,27 +44,32 @@
 
     cursors = this.input.keyboard.createCursorKeys();
 
-    this.input.on('pointerdown', () => { pointerDown = true; });
-    this.input.on('pointerup', () => { pointerDown = false; });
-  }
-
-  function update() {
-    ball.body.setVelocity(0);
-
-    if (cursors.left.isDown) ball.body.setVelocityX(-SPEED);
-    else if (cursors.right.isDown) ball.body.setVelocityX(SPEED);
-
-    if (cursors.up.isDown) ball.body.setVelocityY(-SPEED);
-    else if (cursors.down.isDown) ball.body.setVelocityY(SPEED);
-
-    if (pointerDown) {
-      const pointer = this.input.activePointer;
+    this.input.on('pointerdown', pointer => {
       const dx = pointer.worldX - ball.x;
       const dy = pointer.worldY - ball.y;
       const dist = Math.hypot(dx, dy);
       if (dist > 4) {
-        ball.body.setVelocity((dx / dist) * SPEED, (dy / dist) * SPEED);
+        moveDir = { x: dx / dist, y: dy / dist };
       }
+    });
+  }
+
+  function update() {
+    let vx = 0;
+    let vy = 0;
+    let keyUsed = false;
+
+    if (cursors.left.isDown) { vx = -SPEED; keyUsed = true; }
+    else if (cursors.right.isDown) { vx = SPEED; keyUsed = true; }
+
+    if (cursors.up.isDown) { vy = -SPEED; keyUsed = true; }
+    else if (cursors.down.isDown) { vy = SPEED; keyUsed = true; }
+
+    if (keyUsed) {
+      moveDir = { x: 0, y: 0 };
+      ball.body.setVelocity(vx, vy);
+    } else {
+      ball.body.setVelocity(moveDir.x * SPEED, moveDir.y * SPEED);
     }
   }
 </script>
